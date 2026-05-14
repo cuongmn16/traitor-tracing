@@ -35,6 +35,8 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     @Value("${jwt.signerKey}")
     protected  String SIGNER_KEY ;
+    @Autowired
+    private WatermarkClientService watermarkClientService;
 
     public Users createUser(UserRequest userRegisterRequest) {
        if(userRepository.existsByUsername(userRegisterRequest.getUsername())) {
@@ -44,7 +46,11 @@ public class UserService {
        user.setUsername(userRegisterRequest.getUsername());
        user.setPassword_hash(passwordEncoder.encode(userRegisterRequest.getPassword_hash()));
        user.setRole(userRegisterRequest.getRole());
-       user.setFingerprint_bits(userRegisterRequest.getFingerprint_bits());
+       
+       // Tự động sinh mã fingerprint từ hệ thống Python (Tardos Code)
+       String generatedFingerprint = watermarkClientService.generateFingerprint();
+       user.setFingerprint_bits(generatedFingerprint);
+       
        return userRepository.save(user);
     }
 

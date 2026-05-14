@@ -6,6 +6,7 @@ import com.example.traitortracing.entity.TraceResults;
 import com.example.traitortracing.mapper.TraceMapper;
 import com.example.traitortracing.repository.TraceResultsRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,31 +16,33 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor // Thay cho @Autowired thủ công
 public class TraceResultsService {
-    private final TraceResultsRepository repository;
-    private final TraceMapper mapper;
+    @Autowired
+    private  TraceResultsRepository repository;
+    @Autowired
+    private  TraceMapper traceMapper;
 
     public TraceResponse create(TraceRequest request) {
-        TraceResults trace = mapper.toTraceResults(request);
-        return mapper.toTraceResponse(repository.save(trace));
+        TraceResults trace = traceMapper.toTraceResults(request);
+        return traceMapper.toTraceResponse(repository.save(trace));
     }
 
     public List<TraceResponse> getAll() {
         return repository.findAll().stream()
-                .map(mapper::toTraceResponse)
+                .map(traceMapper::toTraceResponse)
                 .collect(Collectors.toList());
     }
 
     public TraceResponse getById(UUID id) {
         return repository.findById(id)
-                .map(mapper::toTraceResponse)
+                .map(traceMapper::toTraceResponse)
                 .orElseThrow(() -> new RuntimeException("Trace result not found"));
     }
 
     public TraceResponse update(UUID id, TraceRequest request) {
         TraceResults trace = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Trace result not found"));
-        mapper.updateTraceResults(trace, request);
-        return mapper.toTraceResponse(repository.save(trace));
+        traceMapper.updateTraceResults(trace, request);
+        return traceMapper.toTraceResponse(repository.save(trace));
     }
 
     public void delete(UUID id) {
