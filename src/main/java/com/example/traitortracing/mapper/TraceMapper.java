@@ -10,7 +10,11 @@ import org.mapstruct.MappingTarget;
 public interface TraceMapper {
     TraceResponse toTraceResponse(TraceResults traceResults);
 
+    @org.mapstruct.Mapping(target = "id", ignore = true)
+    @org.mapstruct.Mapping(target = "createdAt", ignore = true)
     TraceResults toTraceResults(TraceRequest request);
 
+    @org.mapstruct.Mapping(target = "id", ignore = true)
+    @org.mapstruct.Mapping(target = "createdAt", ignore = true)
     void updateTraceResults(@MappingTarget TraceResults traceResults, TraceRequest request);
 }

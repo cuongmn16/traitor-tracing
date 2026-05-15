@@ -15,13 +15,17 @@ public class WatermarkClientService {
     private final String PYTHON_API_URL = "http://localhost:8000";
 
     public byte[] embedWatermark(MultipartFile file, String fingerprint) throws Exception {
+        return embedWatermark(file.getBytes(), file.getOriginalFilename() != null ? file.getOriginalFilename() : "image.jpg", fingerprint);
+    }
+
+    public byte[] embedWatermark(byte[] fileBytes, String fileName, String fingerprint) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new ByteArrayResource(file.getBytes()) {
+        body.add("file", new ByteArrayResource(fileBytes) {
             @Override
-            public String getFilename() { return file.getOriginalFilename() != null ? file.getOriginalFilename() : "image.jpg"; }
+            public String getFilename() { return fileName; }
         });
         body.add("fingerprint", fingerprint);
         
@@ -60,13 +64,17 @@ public class WatermarkClientService {
 
     public Map<String, Object> accuse(String original, String extracted) {
         HttpHeaders headers = new HttpHeaders();
+        // BẮT BUỘC dùng FORM_URLENCODED vì Python dùng Form(...)
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        
+
+        // BẮT BUỘC dùng MultiValueMap
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("fingerprint_original", original);
         body.add("fingerprint_extracted", extracted);
-        
+
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
+
+        // Gửi request
         ResponseEntity<Map> response = restTemplate.postForEntity(PYTHON_API_URL + "/accuse", requestEntity, Map.class);
         return response.getBody();
     }
