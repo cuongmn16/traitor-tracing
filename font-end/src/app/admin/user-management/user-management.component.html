@@ -1,0 +1,107 @@
+<div class="user-header">
+    <div class="title-group">
+        <h1>Quản lý người dùng</h1>
+        <p>Quản lý định danh và mã Fingerprint để truy vết phát tán lậu</p>
+    </div>
+    <button class="btn btn-add" (click)="openModal()">
+        <i class="fa fa-plus"></i> Thêm người dùng mới
+    </button>
+</div>
+
+<div class="filter-bar">
+    <div class="search-box">
+        <input type="text" placeholder="Nhập Id để tìm kiếm">
+        <button class="btn-search">Tìm kiếm</button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="user-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Ngày tham gia</th>
+                <th>Trạng thái</th>
+              <th>Vai trò </th>
+                <th class="text-center">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let user of users">
+                <td>{{ user.id }}</td>
+                <td>
+                    <div class="user-info">
+                        <span class="user-username">{{ user.username }}</span>
+                        <span class="user-name">{{ user.name }}</span>
+                    </div>
+                </td>
+                <td>{{ user.created_at | date:"dd/MM/yyyy"}}</td>
+                <td><span class="status status-active">Hoạt động</span></td>
+                  <td><span class="role role-admin">{{user.role}}</span></td>
+                <td class="text-center">
+                    <button class="btn-icon btn-edit" title="Sửa">✎</button>
+                    <button class="btn-icon btn-delete" (click)="deleteUser(user.id)" title="Xóa">🗑</button>
+                </td>
+
+            </tr>
+
+        </tbody>
+    </table>
+</div>
+
+<div class="overlay" *ngIf="isOpen">
+
+    <div class="modal">
+        <h2>Thêm User</h2>
+
+        <form [formGroup]="registerForm" (ngSubmit)="createUser()">
+            <div class="form-group">
+                <input type="text" placeholder="Username" formControlName="username">
+                <small class="error"
+                    *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.errors?.['required']">
+                    Username không được để trống
+                </small>
+
+                <small class="error"
+                    *ngIf="(registerForm.get('username')?.touched || registerForm.get('username')?.dirty) && registerForm.get('username')?.hasError('minlength')">
+                    Username phải lớn hơn 4 ký tự
+                </small>
+
+            </div>
+
+          <div class="form-group">
+            <label>Mật khẩu</label>
+            <input type="password" formControlName="password_hash" placeholder="Nhập mật khẩu">
+
+            <small class="error"
+                   *ngIf="registerForm.get('password_hash')?.touched && registerForm.get('password_hash')?.errors?.['required']">
+              Mật khẩu không được để trống
+            </small>
+            <small class="error"
+                   *ngIf="registerForm.get('password_hash')?.touched && registerForm.get('password_hash')?.errors?.['minlength']">
+              Mật khẩu phải tối thiểu 6 ký tự
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Xác nhận mật khẩu</label>
+            <input type="password" formControlName="confirmPassword" placeholder="Nhập lại mật khẩu">
+
+            <small class="error"
+                   *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.errors?.['required']">
+              Xác nhận mật khẩu không được để trống
+            </small>
+            <small class="error"
+                   *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.errors?.['passwordMismatch']">
+              Mật khẩu không trùng khớp
+            </small>
+          </div>
+
+
+
+            <button type="submit"[disabled]="registerForm.invalid">Lưu</button>
+            <button (click)="closeModal()">Đóng</button>
+        </form>
+    </div>
+</div>

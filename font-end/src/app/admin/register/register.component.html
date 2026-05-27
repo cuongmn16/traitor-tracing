@@ -1,0 +1,102 @@
+<div class="register-container">
+
+    <div class="register-left">
+        <div class="overlay">
+            <h1>🧬 TRAITOR TRACING</h1>
+            <p>Secure Content Protection System</p>
+        </div>
+    </div>
+
+    <div class="register-right">
+        <div class="register-box">
+            <h2>Tạo tài khoản mới</h2>
+            <p class="subtitle">Đăng ký để truy cập hệ thống</p>
+
+            <form [formGroup]="registerForm" (ngSubmit)="register()">
+
+              <div class="form-group">
+                <label>Họ và tên</label>
+                <input type="text" formControlName="username" placeholder="Nhập họ và tên">
+
+                <small class="error"
+                       *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.errors?.['required']">
+                  Họ và tên không được để trống
+                </small>
+                <small class="error"
+                       *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.errors?.['minlength']">
+                  Họ và tên phải tối thiểu 3 ký tự
+                </small>
+
+              </div>
+                <div class="form-group">
+                    <label>Tên hiển thị</label>
+                    <input type="text" formControlName="name" placeholder="Nhập tên hiển thị">
+
+                    <small class="error"
+                        *ngIf="registerForm.get('name')?.touched && registerForm.get('name')?.errors?.['required']">
+                        Họ và tên không được để trống
+                    </small>
+                    <small class="error"
+                        *ngIf="registerForm.get('name')?.touched && registerForm.get('name')?.errors?.['minlength']">
+                        Họ và tên phải tối thiểu 3 ký tự
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" formControlName="password" placeholder="Nhập mật khẩu">
+
+                    <small class="error"
+                        *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['required']">
+                        Mật khẩu không được để trống
+                    </small>
+                    <small class="error"
+                        *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['minlength']">
+                        Mật khẩu phải tối thiểu 6 ký tự
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label>Xác nhận mật khẩu</label>
+                    <input type="password" formControlName="confirmPassword" placeholder="Nhập lại mật khẩu">
+
+                    <small class="error"
+                        *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.errors?.['required']">
+                        Xác nhận mật khẩu không được để trống
+                    </small>
+                    <small class="error"
+                        *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.errors?.['passwordMismatch']">
+                        Mật khẩu không trùng khớp
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label>Vai trò</label>
+                    <select formControlName="role">
+                        <option value="">-- Chọn vai trò --</option>
+                        <option value="USER">User</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+
+                    <small class="error"
+                        *ngIf="registerForm.get('role')?.touched && registerForm.get('role')?.errors?.['required']">
+                        Vai trò không được để trống
+                    </small>
+                </div>
+
+                <button type="submit" [disabled]="isLoading || registerForm.invalid">
+                    {{ isLoading ? 'Đang đăng ký...' : 'Đăng ký' }}
+                </button>
+                <p [class]="messageType" *ngIf="message">
+                    {{ message }}
+                </p>
+
+            </form>
+            <div class="login-link">
+                <p>Bạn đã có tài khoản?</p> <a (click)="goToLogin()" href="javascript:void(0)">Đăng nhập</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+

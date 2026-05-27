@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: fingerprint
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d fingerprint"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  python:
+    build:
+      context: ../traiter_tracing-python
+      dockerfile: Dockerfile
+    environment:
+      SIFT_FOLDER: /data/sift
+      DATABASE_URL: postgresql://admin:${DB_PASSWORD}@postgres:5432/fingerprint
+      DB_SCHEMA: tracing
+      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      CORS_ORIGINS: http://localhost,http://localhost:4200
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - sift:/data/sift
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  spring:
+    build:
+      context: ../traitor-tracing
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fingerprint?currentSchema=spring
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY}
+      TRACING_PYTHON_URL: http://python:8000
+      FILE_UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+      - sift:/data/sift
+    depends_on:
+      postgres:
+        condition: service_healthy
+      python:
+        condition: service_started
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  gateway:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../font-end/dist/font-end/browser:/usr/share/nginx/html:ro
+      - uploads:/data/uploads:ro
+    depends_on:
+      - spring
+      - python
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:
+  sift:

@@ -1,0 +1,49 @@
+<div class="login-container">
+
+    <div class="login-left">
+        <div class="overlay">
+            <h1>🧬 TRAITOR TRACING</h1>
+            <p>Secure Content Protection System</p>
+        </div>
+    </div>
+
+    <div class="login-right">
+        <div class="login-box">
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Login to your account</p>
+
+            <form [formGroup]="loginForm" (ngSubmit)="login()">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" formControlName="username" placeholder="Enter username">
+
+                    <small class="error"
+                        *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.errors?.['required']">
+                        Username không được để trống
+                    </small>
+
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" formControlName="password" placeholder="Enter password">
+
+                    <small class="error"
+                        *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']">
+                        Password không được để trống
+                    </small>
+                </div>
+
+                <button type="submit">Login</button>
+                <p class="error" *ngIf="message">
+                    {{ message }}
+                </p>
+
+            </form>
+            <div class="register">
+                <p>Bạn chưa có tài khoản?</p> <a routerLink="/register">Đăng ký ngay</a>
+            </div>
+        </div>
+    </div>
+
+</div>

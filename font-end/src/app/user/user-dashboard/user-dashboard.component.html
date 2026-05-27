@@ -1,0 +1,107 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">🧬</span>
+      <div>
+        <h2>Image Library</h2>
+        <p>Browse & download resources</p>
+      </div>
+    </div>
+
+    <div class="user-card">
+
+      <div class="user-avatar"></div>
+
+      <div class="user-info">
+        <h4>{{ user?.name }}</h4>
+        <p></p>
+      </div>
+    </div>
+
+    <div class="menu">
+      <a class="active">
+        <i class="fa-solid fa-image"></i>
+        <span>Thư viện ảnh</span>
+      </a>
+      <a>
+        <i class="fa-solid fa-download"></i>
+        <span>Ảnh đã tải</span>
+      </a>
+      <a>
+        <i class="fa-solid fa-user"></i>
+        <span>Hồ sơ</span>
+      </a>
+    </div>
+
+    <button class="logout-btn" (click)="logout()">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      Đăng xuất
+    </button>
+  </aside>
+
+  <main class="content">
+    <div class="header">
+      <div>
+        <h1>Image Gallery</h1>
+        <p>Secure fingerprint protected images</p>
+      </div>
+
+      <div class="header-right">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Search image..." />
+        </div>
+
+        <div class="avatar">Search</div>
+      </div>
+
+    </div>
+    <div class="image-grid">
+      <div class="image-card" *ngFor="let img of images">
+        <div class="image-wrapper">
+          <img [src]="img.imageUrl" [alt]="img.fileName" />
+
+          <div class="overlay">
+            <button class="view-btn" (click)="openPreview(img)">
+              <i class="fa-solid fa-eye"></i>
+              View
+            </button>
+
+            <button class="download-btn" (click)="download(img.id, img.fileName)">
+              <i class="fa-solid fa-download"></i>
+              Download
+            </button>
+
+          </div>
+        </div>
+
+        <div class="info">
+          <h3>
+            {{ img.fileName }}
+          </h3>
+
+          <div class="meta">
+            <span class="badge">{{ getFileFormat(img.fileName) }}</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="image-modal" *ngIf="selectedImage" (click)="closePreview()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    
+    <canvas id="previewCanvas" class="preview-canvas" style="max-width: 100%; max-height: 75vh; display: block; margin: 0 auto; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.6);"></canvas>
+
+    <div class="modal-info">
+      <h3>{{ selectedImage.fileName }}</h3>
+
+      <button class="close-btn" (click)="closePreview()">
+        ✕
+      </button>
+    </div>
+
+  </div>
+</div>

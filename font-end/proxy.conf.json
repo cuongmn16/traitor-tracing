@@ -1,0 +1,21 @@
+{
+  "/api/tracing": {
+    "target": "http://localhost:8000",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/tracing": ""
+    },
+    "logLevel": "debug"
+  },
+  "/api": {
+    "target": "http://localhost:8080",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/uploads": {
+    "target": "http://localhost:8080",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

@@ -1,0 +1,102 @@
+package com.example.traitortracing.controller;
+
+import com.example.traitortracing.dto.request.ImageRequest;
+import com.example.traitortracing.dto.response.ApiResponse;
+import com.example.traitortracing.dto.response.ImageResponse;
+import com.example.traitortracing.entity.Images;
+
+import com.example.traitortracing.service.ImagesService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/images")
+@CrossOrigin("*")
+public class ImagesController {
+    @Autowired
+    private ImagesService imagesService;
+
+    @Autowired
+    private com.example.traitortracing.service.WatermarkClientService watermarkClientService;
+
+    @Value("${file.upload-dir:uploads}")
+    private String uploadDir;
+
+    @PostMapping(value = "/upload", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ImageResponse> uploadImage(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            Path dir = Path.of(uploadDir);
+            Files.createDirectories(dir);
+            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            String filePath = "uploads/" + fileName;
+            Path dest = dir.resolve(fileName);
+            file.transferTo(dest);
+
+            ImageRequest request = new ImageRequest();
+            request.setFileName(file.getOriginalFilename());
+            request.setFilePath(filePath);
+            request.setPhash("PENDING");
+
+            ApiResponse<ImageResponse> apiResponse = new ApiResponse<>();
+            ImageResponse savedImage = imagesService.create(request);
+            apiResponse.setResult(savedImage);
+
+            // Gửi sang Python để lưu SIFT vector phục vụ Auto Search
+            try {
+                byte[] fileBytes = Files.readAllBytes(dest);
+                watermarkClientService.saveSiftVector(fileBytes, savedImage.getId().toString());
+            } catch (Exception e) {
+                System.out.println("Cảnh báo: Không thể lưu SIFT vector cho ảnh " + savedImage.getId() + ". " + e.getMessage());
+            }
+
+            return apiResponse;
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to upload file", e);
+        }
+    }
+
+    @PostMapping
+    public ApiResponse<ImageResponse> create(@RequestBody ImageRequest imageRequest) {
+        ApiResponse<ImageResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(imagesService.create(imageRequest));
+        return apiResponse;
+    }
+
+    @GetMapping
+    public ApiResponse<List<ImageResponse>> getAll() {
+        ApiResponse<List<ImageResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(imagesService.getAll());
+        return apiResponse;
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponse<ImageResponse> getById(@PathVariable UUID id) {
+        ApiResponse<ImageResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(imagesService.getById(id));
+        return apiResponse;
+    }
+
+    @PutMapping("/{id}")
+    public ApiResponse<ImageResponse> update(@PathVariable UUID id, @RequestBody ImageRequest image) {
+        ApiResponse<ImageResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(imagesService.update(id, image));
+        return apiResponse;
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<String> delete(@PathVariable UUID id) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        watermarkClientService.deleteSiftVector(id.toString());
+        imagesService.delete(id);
+        apiResponse.setResult("Image deleted successfully");
+        return apiResponse;
+    }
+
+}

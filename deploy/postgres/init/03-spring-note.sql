@@ -1,0 +1,3 @@
+-- Spring Boot (Hibernate ddl-auto=update) tự tạo bảng trong schema spring:
+--   spring.users, spring.images, spring.downloads, spring.trace_results, ...
+-- Không tạo bảng users/images ở schema tracing.

@@ -1,0 +1,100 @@
+<div class="top-bar">
+    <h1>Admin Dashboard</h1>
+    <div style="color: #95aac9">{{ currentDate | date:'dd/MM/yyyy' }}</div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card" *ngFor="let stat of stats">
+        <div class="stat-icon" [style.color]="stat.color">
+            <i class="material-icons">{{ stat.icon }}</i>
+        </div>
+        <div class="stat-info">
+            <p>{{ stat.label }}</p>
+            <h2>{{ stat.value }}</h2>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-layout">
+    <div class="left-col">
+        <div class="card-panel">
+            <h3>Protected Content Distribution</h3>
+            <div class="chart-container">
+                <div class="bar-wrapper" *ngFor="let bar of chartData">
+                    <div class="bar" [style.height.%]="bar.percent"></div>
+                    <span>{{ bar.day }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="right-col">
+        <div class="card-panel investigation-panel">
+            <h3>🔍 THEO DÕI NHANH | ĐIỀU TRA</h3>
+            <div class="drop-zone">
+                <i class="material-icons">cloud_upload</i>
+                <p>Kéo thả tệp nghi vấn</p>
+            </div>
+            <button class="btn-trace">BẮT ĐẦU ĐIỀU TRA</button>
+        </div>
+    </div>
+</div>
+<div class="dashboard-layout">
+    <div class="left-col">
+        <div class="card-box mt-4">
+            <div class="card-header">
+                <h3>Nhật ký hoạt động gần đây</h3>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Action</th>
+                        <th>Content</th>
+                        <th>User</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr *ngFor="let log of activities">
+                        <td>{{ log.time }}</td>
+                        <td><span class="badge">{{ log.action }}</span></td>
+                        <td>{{ log.content }}</td>
+                        <td>{{ log.user }}</td>
+                    </tr>
+
+                    <tr *ngIf="activities.length === 0">
+                        <td colspan="4" style="text-align: center;">
+                            Không có hoạt động nào
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-box mt-4">
+        <div class="card-header">
+            <h3>⚠️ Recent Piracy Alerts</h3>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Leaker ID</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr *ngFor="let alert of alerts">
+                    <td><strong>{{ alert.fileName }}</strong></td>
+                    <td class="badge-danger">
+                        ID: {{ alert.leakerId }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

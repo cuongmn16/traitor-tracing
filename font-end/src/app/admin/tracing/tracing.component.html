@@ -1,0 +1,226 @@
+<div class="background-glow"></div>
+<div class="trace-page">
+  <div class="trace-card">
+    <div class="header">
+      <div class="logo-circle">
+        🔍
+      </div>
+      <h1>Traitor Tracing System</h1>
+      <p>
+        Upload leaked image to identify suspicious user
+      </p>
+    </div>
+
+    <!-- Auto-Search Mode Control -->
+    <div class="active-display-container">
+      <div class="mode-toggle-row">
+        <div class="mode-label-group">
+          <span class="mode-icon">🤖</span>
+          <div class="mode-text">
+            <span class="mode-title">Tự Động Tìm Kiếm Ảnh Gốc (Auto-Search)</span>
+            <span class="mode-desc">Hệ thống sẽ dùng SIFT để tự động tìm ảnh bị đánh cắp và nắn chỉnh kích thước, góc xoay (Chống Crop/Resize/Xoay ảnh)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-section">
+      <label class="upload-box">
+        <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden>
+        <div class="upload-content">
+          <div class="upload-icon">
+            ⬆
+          </div>
+          <p *ngIf="!selectedFile">
+            Click or drag leaked image here
+          </p>
+          <p *ngIf="selectedFile" class="selected-file">
+            {{ selectedFile.name }}
+          </p>
+        </div>
+      </label>
+
+      <button class="trace-btn" (click)="traceImage()" [disabled]="loading">
+
+        <span *ngIf="!loading">
+          TRACE IMAGE
+        </span>
+
+        <span *ngIf="loading" class="loader"></span>
+
+      </button>
+    </div>
+    <div *ngIf="notification" class="notification" [ngClass]="notificationType">
+      {{ notification }}
+    </div>
+
+    <div class="result-panel animate-result" *ngIf="result">
+      <div class="result-header">
+        <h2>
+          Trace Result
+        </h2>
+
+        <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
+          <button class="print-report-btn" (click)="printReport()" *ngIf="result.status === 'FOUND'">
+            🖨️ In báo cáo vi phạm
+          </button>
+          <div class="status-badge" [ngClass]="{
+              found: result.status === 'FOUND',
+              notfound: result.status === 'NOT_FOUND'
+              }">
+            {{ result.status }}
+          </div>
+        </div>
+      </div>
+
+      <div class="suspect-card" *ngIf="result.status === 'FOUND'">
+        <div class="suspect-avatar">
+          👤
+        </div>
+        <div class="suspect-info">
+          <h3>
+            {{ result.suspect_username }}
+          </h3>
+
+          <p> Suspect ID: {{ result.suspect_id }}</p>
+        </div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric-box">
+          <span class="metric-label">
+            Confidence
+          </span>
+
+          <span class="metric-value">
+            {{ result.confidence | percent:'1.0-2' }}
+          </span>
+        </div>
+
+        <div class="metric-box">
+
+          <span class="metric-label"> Downloads </span>
+          <span class="metric-value">{{ result.download_count || 0 }} </span>
+
+        </div>
+      </div>
+
+      <div class="last-download" *ngIf="result.last_download_at">
+        <strong> Last Download: </strong>
+
+        {{ result.last_download_at | date: 'dd/MM/yyyy HH:mm:ss' }}
+
+      </div>
+
+      <div class="fingerprint-section">
+        <h3>Extracted Fingerprint</h3>
+
+        <textarea readonly> {{ result.extracted_fingerprint }}</textarea>
+      </div>
+
+      <div class="message-box" *ngIf="result.message">
+        {{ result.message }}
+      </div>
+
+      <div class="matched-image-box" *ngIf="result.matched_original_filename" style="margin-top: 15px; padding: 10px; background: rgba(0, 255, 0, 0.1); border-left: 4px solid #00ff00; border-radius: 4px;">
+        <strong>Ảnh gốc khớp với CSDL:</strong> {{ result.matched_original_filename }} (ID: {{ result.matched_original_image_id }})
+        <br><small style="color: #ccc;">Đã dùng thuật toán Auto-Search và căn chỉnh ảnh bằng SIFT/ORB thành công.</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- BÁO CÁO IN ẤN (CHỈ HIỂN THỊ KHI IN) -->
+  <div class="print-only-report" *ngIf="result && result.status === 'FOUND'">
+    <div class="report-header">
+      <div class="header-national">
+        <p class="national-title">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+        <p class="national-subtitle">Độc lập - Tự do - Hạnh phúc</p>
+        <div class="header-divider"></div>
+      </div>
+      <div class="header-org">
+        <p>HỆ THỐNG AN NINH ĐA PHƯƠNG TIỆN</p>
+        <p>TRUNG TÂM PHÂN TÍCH & TRUY VẾT WATERMARK</p>
+      </div>
+    </div>
+
+    <div class="report-title-section">
+      <h1 class="report-title">BÁO CÁO ĐIỀU TRA VI PHẠM SỞ HỮU TRÍ TUỆ</h1>
+      <p class="report-date">Ngày lập báo cáo: {{ currentDate | date: 'dd/MM/yyyy HH:mm:ss' }}</p>
+    </div>
+
+    <div class="report-section">
+      <h3 class="section-title">I. THÔNG TIN PHÁT HIỆN VI PHẠM</h3>
+      <table class="report-table">
+        <tr>
+          <td class="col-label">Đối tượng tình nghi:</td>
+          <td class="col-val"><strong>{{ result.suspect_username }}</strong></td>
+        </tr>
+        <tr>
+          <td class="col-label">Mã số tài khoản (User ID):</td>
+          <td class="col-val">{{ result.suspect_id }}</td>
+        </tr>
+        <tr>
+          <td class="col-label">Độ tin cậy khớp mã (Confidence):</td>
+          <td class="col-val" style="color: #d32f2f; font-weight: bold;">
+            {{ result.confidence | percent:'1.0-2' }} (Trùng khớp vân tay Tardos)
+          </td>
+        </tr>
+        <tr>
+          <td class="col-label">Trạng thái điều tra:</td>
+          <td class="col-val"><strong>ĐÃ XÁC ĐỊNH THỦ PHẠM (FOUND)</strong></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="report-section">
+      <h3 class="section-title">II. LẠCH SỬ HOẠT ĐỘNG LIÊN QUAN</h3>
+      <table class="report-table">
+        <tr>
+          <td class="col-label">Tổng số lượt tải ảnh bảo mật:</td>
+          <td class="col-val">{{ result.download_count || 0 }} lượt</td>
+        </tr>
+        <tr *ngIf="result.last_download_at">
+          <td class="col-label">Lần tải cuối cùng trước khi rò rỉ:</td>
+          <td class="col-val">{{ result.last_download_at | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+        </tr>
+        <tr>
+          <td class="col-label">Tên tệp rò rỉ điều tra:</td>
+          <td class="col-val" *ngIf="selectedFile">{{ selectedFile.name }}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="report-section">
+      <h3 class="section-title">III. BẰNG CHỨNG DẤU VẾT SỐ (DIGITAL FINGERPRINT)</h3>
+      <p>Mã vân tay Tardos bóc tách từ ảnh rò rỉ trùng khớp với mã vân tay hệ thống đã đăng ký cho tài khoản người dùng <strong>{{ result.suspect_username }}</strong>. Chi tiết chuỗi vân tay nhúng:</p>
+      <div class="extracted-fingerprint-print">
+        <code>{{ result.extracted_fingerprint }}</code>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <h3 class="section-title">IV. KẾT LUẬN & KIẾN NGHỊ</h3>
+      <p>Căn cứ vào dữ liệu bóc tách watermark DWT-DCT kết hợp cấu trúc chống cấu kết Tardos, hệ thống phát hiện chính xác tài khoản <strong>{{ result.suspect_username }}</strong> chịu trách nhiệm trực tiếp trong việc rò rỉ tài sản số này ra bên ngoài.</p>
+      <p>Đề nghị ban quản trị thực hiện các biện pháp xử lý:</p>
+      <ul class="action-list">
+        <li>Tạm khóa tài khoản người dùng vi phạm để ngăn ngừa phát tán thêm.</li>
+        <li>Ghi nhận biên bản vi phạm vào cơ sở dữ liệu làm bằng chứng pháp lý.</li>
+        <li>Xuất bản tài liệu báo cáo này gửi các bộ phận liên quan giải quyết.</li>
+      </ul>
+    </div>
+
+    <div class="report-signatures">
+      <div class="sig-box">
+        <p class="sig-role">NGƯỜI LẬP BÁO CÁO</p>
+        <p class="sig-note">(Ký và ghi rõ họ tên)</p>
+        <div class="sig-space"></div>
+        <p class="sig-name">Hệ thống Tự động</p>
+      </div>
+      <div class="sig-box">
+        <p class="sig-role">PHÊ DUYỆT CỦA CƠ QUAN CHỦ QUẢN</p>
+        <p class="sig-note">(Ký tên và đóng dấu)</p>
+        <div class="sig-space"></div>
+      </div>
+    </div>
+  </div>
+</div>

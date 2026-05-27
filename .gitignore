@@ -1,0 +1,7 @@
+font-end/node_modules/
+font-end/dist/
+font-end/.angular/
+traitor-tracing/target/
+*.log
+.vscode/
+.idea/

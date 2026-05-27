@@ -1,0 +1,33 @@
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<div class="admin-wrapper">
+    <aside class="sidebar">
+        <div class="logo-box">🧬 TRAITOR TRACING</div>
+        <nav class="nav-menu">
+            <a class="nav-item" routerLink="/admin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                <i class="material-icons">dashboard</i> Trang chủ
+            </a>
+            <a class="nav-item" routerLink="/admin/original-resources" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+                <i class="material-icons">folder</i> Tài nguyên gốc
+            </a>
+            <a class="nav-item" routerLink="/admin/tracing" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+                <i class="material-icons">search</i> Trung tâm điều tra
+            </a>
+            <a class="nav-item" routerLink="/admin/user-management" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true}"> 
+                <i class="material-icons">people</i> Quản lý người dùng
+            </a>
+            <a class="nav-item">
+                <i class="material-icons">assignment</i> Báo cáo
+            </a>
+            <a class="nav-item">
+                <i class="material-icons">settings</i> Cài đặt
+            </a>
+        </nav>
+        <div class="admin-profile">
+            👤 Admin | {{user?.username}} <br> <button (click) = "logout()"> [Logout] </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <router-outlet></router-outlet>
+    </main>
+</div>

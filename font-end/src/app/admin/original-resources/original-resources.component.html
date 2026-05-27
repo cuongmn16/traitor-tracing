@@ -1,0 +1,306 @@
+<!-- image-manager.component.html -->
+<div class="im-shell">
+
+  <!-- ── TOAST ── -->
+  <div class="im-toast" *ngIf="toast" [class]="'im-toast--' + toast.type">
+    <span class="im-toast__icon">
+      {{ toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : 'ℹ' }}
+    </span>
+    {{ toast.message }}
+  </div>
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="im-sidebar">
+    <div class="im-sidebar__brand">
+      <div class="im-brand-mark">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="8" fill="url(#brandGrad)"/>
+          <path d="M6 20L10 13l4 5 3-3.5L22 20H6z" fill="white" opacity=".9"/>
+          <circle cx="18" cy="10" r="2.5" fill="white" opacity=".9"/>
+          <defs>
+            <linearGradient id="brandGrad" x1="0" y1="0" x2="28" y2="28">
+              <stop stop-color="#7C3AED"/>
+              <stop offset="1" stop-color="#DB2777"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="im-brand-name">ImageVault</span>
+    </div>
+
+    <nav class="im-nav">
+      <div class="im-nav__item im-nav__item--active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        Thư viện
+      </div>
+    </nav>
+
+    <div class="im-sidebar__stats">
+      <div class="im-stat">
+        <span class="im-stat__num">{{ images.length }}</span>
+        <span class="im-stat__label">Tổng ảnh</span>
+      </div>
+      <div class="im-stat">
+        <span class="im-stat__num">{{ filteredImages.length }}</span>
+        <span class="im-stat__label">Hiển thị</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="im-main">
+
+    <!-- HEADER -->
+    <header class="im-header">
+      <div class="im-header__left">
+        <h1 class="im-header__title">Thư viện ảnh</h1>
+        <p class="im-header__sub">Quản lý & tổ chức media</p>
+      </div>
+      <div class="im-header__actions">
+        <div class="im-search">
+          <svg class="im-search__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="im-search__input" [(ngModel)]="searchTerm" placeholder="Tìm kiếm ảnh…" />
+        </div>
+
+        <button class="im-btn im-btn--ghost" (click)="toggleView($event)" style="position:relative;overflow:hidden">
+          <span *ngFor="let r of ripples" class="im-ripple" [style.left.px]="r.x" [style.top.px]="r.y"></span>
+          <svg *ngIf="viewMode === 'grid'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          <svg *ngIf="viewMode === 'list'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+        </button>
+
+        <button class="im-btn im-btn--primary" (click)="fileInput.click()" style="position:relative;overflow:hidden">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Upload ảnh
+        </button>
+        <input #fileInput type="file" accept="image/*" hidden (change)="onFileSelect($event)"/>
+      </div>
+    </header>
+
+    <!-- DROP ZONE -->
+    <div class="im-dropzone"
+         [class.im-dropzone--active]="isDragging"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave()"
+         (drop)="onDrop($event)">
+      <div class="im-dropzone__inner">
+        <div class="im-dropzone__icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <p class="im-dropzone__text">Kéo thả ảnh vào đây để upload</p>
+      </div>
+    </div>
+
+    <!-- UPLOAD PROGRESS -->
+    <div class="im-progress-bar" *ngIf="isUploading">
+      <div class="im-progress-bar__fill" [style.width.%]="uploadProgress"></div>
+      <span class="im-progress-bar__label">Đang upload… {{ uploadProgress }}%</span>
+    </div>
+
+    <!-- LOADING -->
+    <div class="im-loader" *ngIf="isLoading">
+      <div class="im-loader__spinner">
+        <div></div><div></div><div></div>
+      </div>
+      <p>Đang tải ảnh…</p>
+    </div>
+
+    <!-- EMPTY -->
+    <div class="im-empty" *ngIf="!isLoading && filteredImages.length === 0">
+      <div class="im-empty__art">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <rect width="64" height="64" rx="16" fill="var(--im-surface-raised)"/>
+          <rect x="14" y="18" width="36" height="28" rx="4" stroke="var(--im-text-dim)" stroke-width="2" fill="none"/>
+          <circle cx="24" cy="28" r="4" stroke="var(--im-text-dim)" stroke-width="1.5" fill="none"/>
+          <path d="M14 38l10-8 8 10 6-6 6 8" stroke="var(--im-text-dim)" stroke-width="1.5" fill="none"/>
+        </svg>
+      </div>
+      <p class="im-empty__text">{{ searchTerm ? 'Không tìm thấy ảnh nào' : 'Chưa có ảnh nào. Upload ảnh đầu tiên!' }}</p>
+    </div>
+
+    <!-- GRID VIEW -->
+    <div class="im-grid" *ngIf="!isLoading && viewMode === 'grid'">
+      <div class="im-card"
+           *ngFor="let img of filteredImages; trackBy: trackById"
+           [class.im-card--selected]="selectedImage?.id === img.id">
+        <div class="im-card__thumb" (click)="openPreview(img, $event)" style="position:relative;overflow:hidden">
+          <span *ngFor="let r of ripples" class="im-ripple" [style.left.px]="r.x" [style.top.px]="r.y"></span>
+          <img [src]="img.imageUrl || ('/' + img.filePath)" [alt]="img.fileName" class="im-card__thumb-img" onerror="this.style.display='none'" />
+          <div class="im-card__thumb-bg">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--im-text-dim)" stroke-width="1">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+          </div>
+          <div class="im-card__overlay">
+            <span class="im-badge im-badge--preview">Xem ảnh</span>
+          </div>
+        </div>
+        <div class="im-card__body">
+          <p class="im-card__name" [title]="img.fileName">{{ img.fileName }}</p>
+          <p class="im-card__meta">{{ formatDate(img.createdAt) }}</p>
+          <p class="im-card__hash">
+            <span class="im-hash-dot"></span>
+            {{ img.phash }}
+          </p>
+        </div>
+        <div class="im-card__actions">
+          <button class="im-icon-btn im-icon-btn--edit" (click)="openEdit(img, $event)" title="Chỉnh sửa" style="position:relative;overflow:hidden">
+            <span *ngFor="let r of ripples" class="im-ripple" [style.left.px]="r.x" [style.top.px]="r.y"></span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="im-icon-btn im-icon-btn--delete" (click)="confirmDelete(img.id, $event)" title="Xóa" style="position:relative;overflow:hidden">
+            <span *ngFor="let r of ripples" class="im-ripple" [style.left.px]="r.x" [style.top.px]="r.y"></span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+              <path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIST VIEW -->
+    <div class="im-list" *ngIf="!isLoading && viewMode === 'list'">
+      <div class="im-list__head">
+        <span>Tên file</span>
+        <span>Đường dẫn</span>
+        <span>pHash</span>
+        <span>Ngày tạo</span>
+        <span>Thao tác</span>
+      </div>
+      <div class="im-list__row"
+           *ngFor="let img of filteredImages; trackBy: trackById">
+        <span class="im-list__cell im-list__cell--name">
+          <div class="im-list__thumb" style="position:relative;overflow:hidden">
+            <img [src]="img.imageUrl || ('/' + img.filePath)" [alt]="img.fileName" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1" onerror="this.style.display='none'" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--im-accent)" stroke-width="2" style="position:relative;z-index:0">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+          </div>
+          {{ img.fileName }}
+        </span>
+        <span class="im-list__cell im-list__cell--path">{{ img.filePath }}</span>
+        <span class="im-list__cell">
+          <code class="im-code">{{ img.phash }}</code>
+        </span>
+        <span class="im-list__cell">{{ formatDate(img.createdAt) }}</span>
+        <span class="im-list__cell im-list__cell--actions">
+          <button class="im-icon-btn im-icon-btn--edit" (click)="openEdit(img, $event)" style="position:relative;overflow:hidden">
+            <span *ngFor="let r of ripples" class="im-ripple" [style.left.px]="r.x" [style.top.px]="r.y"></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="im-icon-btn im-icon-btn--delete" (click)="confirmDelete(img.id, $event)" style="position:relative;overflow:hidden">
+            <span *ngFor="let r of ripples" class="im-ripple" [style.left.px]="r.x" [style.top.px]="r.y"></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
+        </span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── EDIT MODAL ── -->
+<div class="im-overlay" *ngIf="showEditModal" (click)="showEditModal = false">
+  <div class="im-modal im-modal--edit" (click)="$event.stopPropagation()">
+    <div class="im-modal__header">
+      <h2 class="im-modal__title">Chỉnh sửa ảnh</h2>
+      <button class="im-modal__close" (click)="showEditModal = false">✕</button>
+    </div>
+    <div class="im-modal__body">
+      <div class="im-field">
+        <label class="im-field__label">Tên file</label>
+        <input class="im-field__input" [(ngModel)]="editForm.fileName" placeholder="Nhập tên file…" />
+      </div>
+      <div class="im-field">
+        <label class="im-field__label">Đường dẫn</label>
+        <input class="im-field__input" [(ngModel)]="editForm.filePath" placeholder="Nhập đường dẫn…" />
+      </div>
+      <div class="im-field">
+        <label class="im-field__label">pHash</label>
+        <input class="im-field__input im-field__input--mono" [(ngModel)]="editForm.phash" placeholder="Nhập pHash…" />
+      </div>
+    </div>
+    <div class="im-modal__footer">
+      <button class="im-btn im-btn--ghost" (click)="showEditModal = false">Hủy</button>
+      <button class="im-btn im-btn--primary" (click)="saveEdit()">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DELETE CONFIRM ── -->
+<div class="im-overlay" *ngIf="showDeleteConfirm" (click)="showDeleteConfirm = false">
+  <div class="im-modal im-modal--danger" (click)="$event.stopPropagation()">
+    <div class="im-modal__icon-wrap">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--im-danger)" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+      </svg>
+    </div>
+    <h2 class="im-modal__title">Xác nhận xóa</h2>
+    <p class="im-modal__desc">Hành động này không thể hoàn tác. Ảnh sẽ bị xóa vĩnh viễn.</p>
+    <div class="im-modal__footer">
+      <button class="im-btn im-btn--ghost" (click)="showDeleteConfirm = false">Hủy</button>
+      <button class="im-btn im-btn--danger" (click)="deleteImage()">Xóa</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PREVIEW MODAL ── -->
+<div class="im-overlay" *ngIf="previewImage" (click)="previewImage = null">
+  <div class="im-preview" (click)="$event.stopPropagation()">
+    <button class="im-preview__close" (click)="previewImage = null">✕</button>
+    <div class="im-preview__frame">
+      <img [src]="previewImage.imageUrl || ('/' + previewImage.filePath)" [alt]="previewImage.fileName"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+           class="im-preview__img" />
+      <div class="im-preview__fallback" style="display:none">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--im-text-dim)" stroke-width="1">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        <p>Không thể tải ảnh</p>
+      </div>
+    </div>
+    <div class="im-preview__info">
+      <h3 class="im-preview__name">{{ previewImage.fileName }}</h3>
+      <p class="im-preview__path">{{ previewImage.filePath }}</p>
+      <div class="im-preview__tags">
+        <span class="im-tag">pHash: {{ previewImage.phash }}</span>
+        <span class="im-tag">{{ formatDate(previewImage.createdAt) }}</span>
+      </div>
+    </div>
+  </div>
+</div>
